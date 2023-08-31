@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600&amp;display=swap"
+    />
+    <style>
+      @import url(http://scp-jp.wdfiles.com/local--files/japanese-syntax/scp-WikidotCss.css);
+        html {
+            font-size: 2vw;
+        }
+
+        .g {
+            position: relative;
+            width: 42rem;
+            height: 60rem;
+            margin: 4rem;
+            font-size: 1.2rem;
+            background-color: #f9f8f6;
+            box-shadow: -1rem -1rem 1rem rgba(255, 255, 255, 0.5), 1rem 2rem 2rem rgba(0, 0, 0, 0.1);
+            user-select: none;
+            font-family: 'Noto Serif JP', serif;
+            background: linear-gradient(145deg, #e7e6e4, #fff);
+        }
+
+        .shadow {
+            z-index: -1;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -2rem;
+            height: 2rem;
+            background: linear-gradient(90deg, transparent, #000 5%, #000 30%, transparent);
+        }
+
+        .g::before {
+            content: "";
+            z-index: 1;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -4.3rem;
+            height: 4rem;
+            background-color: #f8f8f8;
+            border-radius: 10% 90% 0 0 / 15% 50% 0 0;
+            box-shadow: 0 0 0.5rem 0.5rem #f8f8f8;
+        }
+
+        .g::after {
+            content: "";
+            z-index: 1;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: -2.5rem;
+            width: 2rem;
+            background-color: #f8f8f8;
+            border-radius: 0 0 0 50% / 0 0 0 90%;
+            box-shadow: 0 0 0.5rem 0.5rem #f8f8f8;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="g" unselectable="on"></div>
+    <script>
+      /*
+       * COPIED FROM http://scp-jp.wikidot.com/scp-132-jp-animation
+       **/
+
+      /*
+t : type
+p: position
+v: velocity
+a: accelaration
+d: dom element / direction
+g: gauge
+c: count
+l: lifespan
+s : str
+*/
+
+      (function () {
+        function Vector(x, y, z) {
+          return {
+            x: x,
+            y: y,
+            z: z,
+          };
+        }
+
+        function vLength(a) {
+          return Math.sqrt(vLength2(a));
+        }
+
+        function vLength2(a) {
+          return a.x * a.x + a.y * a.y + a.z * a.z;
+        }
+
+        function vNormal(a) {
+          return vLength2(a) === 0
+            ? Vector(0, 0, 0)
+            : vScale(a, 1 / vLength(a));
+        }
+
+        function vClone(a) {
+          return Vector(a.x, a.y, a.z);
+        }
+
+        function vAddTo(a, b) {
+          (a.x += b.x), (a.y += b.y), (a.z += b.z);
+        }
+
+        function vAdd(a, b) {
+          return Vector(a.x + b.x, a.y + b.y, a.z + b.z);
+        }
+
+        function vSub(a, b) {
+          return Vector(a.x - b.x, a.y - b.y, a.z - b.z);
+        }
+
+        function vCross(a, b) {
+          return Vector(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+          );
+        }
+
+        function vScale(a, b) {
+          return Vector(a.x * b, a.y * b, a.z * b);
+        }
+
+        function simplexNoise(x, y, z) {
+          var a = Math.floor(x);
+          var b = Math.floor(y);
+          var c = Math.floor(z);
+
+          var d = j(h(x));
+          var e = j(h(y));
+          var f = j(h(z));
+
+          var g = [
+            k(a, b, c),
+            k(a + 1, b, c),
+            k(a, b + 1, c),
+            k(a + 1, b + 1, c),
+            k(a, b, c + 1),
+            k(a + 1, b, c + 1),
+            k(a, b + 1, c + 1),
+            k(a + 1, b + 1, c + 1),
+          ];
+
+          return i(
+            i(i(g[0], g[1], d), i(g[2], g[3], d), e),
+            i(i(g[4], g[5], d), i(g[6], g[7], d), e),
+            f
+          );
+
+          function h(x) {
+            return x - Math.floor(x);
+          }
+
+          function i(a, b, r) {
+            return a + r * (b - a);
+          }
+
+          function j(x) {
+            x = Math.min(Math.max(x, 0), 1);
+            return x * x * (3 - 2 * x);
+          }
+
+          function k(x, y, z) {
+            return (
+              h(
+                Math.sin(x * 12.9898 + y * 78.233 + z * 49.038 + 1488) *
+                  43758.5453
+              ) *
+                2 -
+              1
+            );
+          }
+        }
+
+        const TURN = 3;
+        const RESISTANCE = 0.12;
+        const KEEP = 0.009;
+        const EVEN_Y = 0.04;
+        const EVEN_Z = 0.1;
+        const ALIGNMENT = 0.08;
+        const COHETION = 0.00025;
+        const SEPARATION = 0.005;
+        const DISTURB = 0.05;
+        const NOISE = 0.0015;
+        const FLOAT = 0.0025;
+        const TEXT_ALIGNMENT = 0.00025;
+        const WIDTH = 420;
+        const HEIGHT = 600;
+
+        const SIGHT = 20;
+        const RADIUS = 12;
+
+        const THING = 0;
+        const DIALOGUE = 1;
+        const AQUEOUS = 2;
+        const BOID = 3;
+        const BUBBLE = 4;
+        const CHAR = 5;
+
+        function Thing(pos, g) {
+          var a = {};
+          a.t = THING;
+          a.p = pos;
+          a.g = g;
+          return a;
+        }
+
+        function Dialogue(s, pos, g) {
+          var a = Thing(pos, g);
+          a.t = DIALOGUE;
+          vAddTo(a.p, Vector(-10 * s.length, 0, 0));
+          a.s = s;
+          a.count = 0;
+          if (a.p.x < 0) a.p.x = 0;
+          if (WIDTH - 20 * s.length < a.p.x) a.p.x = WIDTH - 20 * s.length;
+          return a;
+        }
+
+        function Aqueous(character, pos, vel, g) {
+          var a = Thing(pos, g);
+          a.t = AQUEOUS;
+          a.p = pos;
+          a.v = vel;
+          a.a = Vector(0, 0, 0);
+          a.d = document.createElement("span");
+          a.d.style.position = "absolute";
+          a.d.textContent = character;
+          g.appendChild(a.d);
+          return a;
+        }
+
+        function Bubble(character, pos, g, boid) {
+          var a = Aqueous(
+            character,
+            pos,
+            Vector(
+              (Math.random() - 0.5) * 0.11,
+              (Math.random() - 0.5) * 0.015,
+              (Math.random() - 0.5) * 0.05
+            ),
+            g
+          );
+          a.t = BUBBLE;
+          a.l = 20;
+          a.c = 0;
+          a.b = boid;
+          a.d.style.color = "#444";
+          a.d.style.transform = "rotateZ(10deg)";
+          return a;
+        }
+
+        function DialogueChar(character, pos, r, l, prev, g) {
+          var a = Aqueous(
+            character,
+            pos,
+            Vector(
+              (Math.random() - 0.5) * 0.11,
+              (Math.random() - 0.5) * 0.015,
+              (Math.random() - 0.5) * 0.05
+            ),
+            g
+          );
+          a.t = CHAR;
+          a.r = r;
+          a.l = l;
+          a.c = 0;
+          a.d.style.color = "#444";
+          a.d.style.transform = "rotateZ(" + r + "deg)";
+          a.prev = prev;
+          return a;
+        }
+
+        function Boid(pos, vel, g) {
+          var a = Aqueous(
+            ["ゆ", "ゆ", "ゅ"][Math.floor(Math.random() * 3)],
+            pos,
+            vel,
+            g
+          );
+          a.t = BOID;
+          a.d.style.position = "absolute";
+          a.d.style.color = "#000";
+          a.m = Math.random() * 10;
+          a.dc = Math.random() * 5000;
+          return a;
+        }
+
+        function update(a, d) {
+          if (a.t == BUBBLE || a.t == CHAR || a.t == BOID) {
+            vAddTo(a.v, a.a);
+            vAddTo(a.p, vScale(a.v, d));
+            a.a = Vector(0, 0, 0);
+
+            if (a.p.x < 0) a.p.x = 0;
+            if (WIDTH - RADIUS < a.p.x) a.p.x = WIDTH - RADIUS;
+            if (a.p.y < 0) a.p.y = 0;
+            if (HEIGHT - RADIUS < a.p.y) a.p.y = HEIGHT - RADIUS;
+          }
+        }
+
+        function control(a, things, dist) {
+          if (a.t == DIALOGUE) {
+            if (a.count % 10 == 0) {
+              things.push(
+                (a.prev = DialogueChar(
+                  a.s.charAt(0),
+                  vClone(a.p),
+                  Math.random() * 20 - 10,
+                  300,
+                  a.prev,
+                  a.g
+                ))
+              );
+              a.s = a.s.substring(1);
+              a.p.x += 20;
+            }
+            a.count++;
+          }
+          if (a.t == BUBBLE) {
+            float(a);
+            resistance(a);
+            noise(a, performance.now());
+            a.c++;
+          }
+          if (a.t == CHAR) {
+            resistance(a);
+            textAlignment(a);
+            noise(a, performance.now());
+            a.c++;
+          }
+          if (a.t == BOID) {
+            turn(a);
+            resistance(a);
+            noise(a, performance.now());
+            keep(a);
+            even(a);
+            disturb(a, dist);
+            var visibleBoids = things.filter(function (x) {
+              return (
+                a !== x &&
+                x.t == BOID &&
+                vLength2(vSub(a.p, x.p)) < SIGHT * SIGHT
+              );
+            });
+            separation(a, things);
+            alignment(a, visibleBoids);
+            cohesion(a, visibleBoids);
+
+            a.m++;
+            if (20 < a.m) {
+              if (visibleBoids.length <= 0)
+                things.push(
+                  Bubble(
+                    [".", "*", "・", "゜"][Math.floor(Math.random() * 4)],
+                    vSub(vClone(a.p), vScale(a.v, 100)),
+                    a.g,
+                    a
+                  )
+                );
+              a.m -= 5 + Math.random() * 10;
+            }
+            a.dc--;
+            if (a.dc <= 0) {
+              if (visibleBoids.length <= 1) {
+                var option = [
+                  "おはよう",
+                  "おやすみ",
+                  "ごめんね",
+                  "うれしいな",
+                  "おいしい",
+                  "ありがとう",
+                  "ありがとう",
+                  "やったね",
+                  "やったね",
+                  "およぐ",
+                  "およぐれんしゅう",
+                  "あつまる",
+                  "あつまるれんしゅう",
+                  "やすむ",
+                  "うんどう",
+                  "おはなし",
+                  "ごはん",
+                  "れんしゅう",
+                  "すすめー",
+                  "すすめー",
+                  "すすめー",
+                  "おなかすく",
+                  "おなかすいた",
+                  "ごはんくれ",
+                  "まぜてー",
+                  "まぜてー",
+                  "これでよし",
+                  "もうひとふんばり",
+                  "ごはんさがそうよ",
+                  "だいじょうぶ？",
+                  "どうしたの？",
+                  "ごはんおいしかた",
+                  "こっちだよ",
+                  "こっちだよ",
+                  "こっちだよ",
+                  "こっち",
+                  "こっち",
+                  "おいで",
+                  "おいで",
+                  "こまったね",
+                  "ねれない",
+                  "ねむくなる",
+                  "ねむい",
+                  "ねむい",
+                ];
+                things.push(
+                  Dialogue(
+                    option[Math.floor(Math.random() * option.length)],
+                    vClone(a.p),
+                    a.g
+                  )
+                );
+              }
+              a.dc = 5000 + Math.random() * 2000;
+            }
+          }
+        }
+
+        function check(a, things) {
+          switch (a.t) {
+            case DIALOGUE:
+              return a.s != "";
+            case BUBBLE:
+              var flag = a.c < a.l;
+              if (flag)
+                for (var i = 0; i < things.length; i++)
+                  if (
+                    things[i] != a.b &&
+                    things[i].t == BOID &&
+                    vLength2(vSub(a.p, things[i].p)) < 300
+                  ) {
+                    flag = false;
+                    break;
+                  }
+              if (!flag) a.g.removeChild(a.d);
+              return flag;
+            case CHAR:
+              if (a.l <= a.c) a.g.removeChild(a.d);
+              return a.c < a.l;
+          }
+          return true;
+        }
+
+        function render(a) {
+          switch (a.t) {
+            case BUBBLE:
+              a.d.style.left = a.p.x * 0.1 + "rem";
+              a.d.style.top = a.p.y * 0.1 + "rem";
+              a.d.style.opacity = a.c < 5 ? 0 : Math.min(1, (a.l - a.c) / 10);
+              return;
+            case CHAR:
+              a.d.style.left = a.p.x * 0.1 + "rem";
+              a.d.style.top = a.p.y * 0.1 + "rem";
+              a.d.style.opacity = Math.min(1, (a.l - a.c) / 10, a.c / 10);
+              return;
+            case BOID:
+              a.d.style.left = a.p.x * 0.1 + "rem";
+              a.d.style.top = a.p.y * 0.1 + "rem";
+              a.d.style.opacity =
+                1 -
+                Math.pow(1 - Math.abs(Math.atan2(a.v.x, a.v.z)) / Math.PI, 4);
+
+              a.d.style.transform =
+                "rotateY(" +
+                ((-Math.atan2(a.v.x, a.v.z) / Math.PI) * 180 + 90) +
+                "deg)" +
+                "rotateZ(" +
+                ((-Math.atan2(Math.sqrt(a.v.x * a.v.x + a.v.z * a.v.z), a.v.y) /
+                  Math.PI) *
+                  180 +
+                  90) +
+                "deg)";
+              return;
+          }
+        }
+
+        function float(a) {
+          vAddTo(a.a, Vector(0, -FLOAT, 0));
+        }
+
+        function resistance(a) {
+          vAddTo(a.a, vScale(a.v, -RESISTANCE));
+        }
+
+        function noise(a, t) {
+          vAddTo(
+            a.a,
+            vScale(
+              Vector(
+                simplexNoise(a.p.x / 200, a.p.y / 200, t / 500),
+                simplexNoise(a.p.x / 200, a.p.y / 200, (50 + t) / 500),
+                simplexNoise(a.p.x / 200, a.p.y / 200, (100 + t) / 500)
+              ),
+              NOISE
+            )
+          );
+        }
+
+        function keep(a) {
+          vAddTo(a.a, vScale(vNormal(a.v), KEEP));
+        }
+
+        function even(a) {
+          vAddTo(
+            a.a,
+            Vector(
+              0,
+              a.v.y * -EVEN_Y,
+              a.p.z * (Math.abs(a.v.z) + 0.001) * -EVEN_Z
+            )
+          );
+        }
+
+        function separation(a, things) {
+          var visibleBoids = things.filter(function (x) {
+            return (
+              a !== x &&
+              (x.t == BOID || x.t == CHAR) &&
+              vLength2(vSub(a.p, x.p)) < SIGHT * SIGHT
+            );
+          });
+          for (var i = 0; i < visibleBoids.length; i++)
+            vAddTo(
+              a.a,
+              vScale(vNormal(vSub(a.p, visibleBoids[i].p)), SEPARATION)
+            );
+        }
+
+        function alignment(a, visibleBoids) {
+          if (visibleBoids.length !== 0) {
+            var sumV = Vector(0, 0, 0);
+            for (var i = 0; i < visibleBoids.length; i++)
+              vAddTo(sumV, visibleBoids[i].v);
+            var aveV = vScale(sumV, 1 / visibleBoids.length);
+            vAddTo(a.a, vScale(vSub(aveV, a.v), ALIGNMENT));
+          }
+        }
+
+        function cohesion(a, visibleBoids) {
+          if (visibleBoids.length !== 0) {
+            var sumP = Vector(0, 0, 0);
+            for (var i = 0; i < visibleBoids.length; i++)
+              vAddTo(sumP, visibleBoids[i].p);
+            var aveP = vScale(sumP, 1 / visibleBoids.length);
+            vAddTo(a.a, vScale(vSub(aveP, a.p), COHETION));
+          }
+        }
+
+        function turn(a) {
+          var wall = Vector(0, 0, 0);
+          if (a.p.x < SIGHT) vAddTo(wall, Vector(1, 0, 0));
+          if (WIDTH - SIGHT < a.p.x) vAddTo(wall, Vector(-1, 0, 0));
+          if (a.p.y < SIGHT) vAddTo(wall, Vector(0, 0.2, 0));
+          if (HEIGHT - SIGHT < a.p.y) vAddTo(wall, Vector(0, -0.2, 0));
+          vAddTo(a.a, vScale(vCross(a.v, vCross(wall, a.v)), TURN));
+        }
+
+        function disturb(a, dist) {
+          if (
+            dist.c < 0 &&
+            dist.y1 < a.p.y &&
+            a.p.y < dist.y2 &&
+            dist.d * a.v.x < -0.025
+          ) {
+            a.a.x = dist.d * DISTURB;
+          }
+        }
+
+        function textAlignment(a) {
+          if (a.prev)
+            vAddTo(
+              a.a,
+              vScale(
+                vSub(vAdd(a.prev.p, Vector(20, 0, 0)), a.p),
+                TEXT_ALIGNMENT
+              )
+            );
+        }
+
+        function apply(g) {
+          var things = [];
+          var p = Vector(Math.random() * WIDTH, Math.random() * HEIGHT, 0);
+          var v = Vector(
+            (Math.random() - 0.5) * 0.125,
+            (Math.random() - 0.5) * 0.015,
+            (Math.random() - 0.5) * 0.05
+          );
+
+          for (var i = 0; i < 20; i++) {
+            if (Math.random() < 0.5) {
+              p = vAdd(
+                p,
+                Vector(
+                  (Math.random() - 0.5) * 40,
+                  (Math.random() - 0.5) * 40,
+                  0
+                )
+              );
+              v = vAdd(
+                v,
+                Vector(
+                  (Math.random() - 0.5) * 0.01,
+                  (Math.random() - 0.5) * 0.01,
+                  (Math.random() - 0.5) * 0.01
+                )
+              );
+              if (p.x < 0) p.x = -p.x;
+              if (WIDTH < p.x) p.x = 2 * WIDTH - p.x;
+              if (p.y < 0) p.y = -p.y;
+              if (HEIGHT < p.y) p.y = 2 * HEIGHT - p.y;
+            } else {
+              p = Vector(Math.random() * WIDTH, Math.random() * HEIGHT, 0);
+              v = Vector(
+                (Math.random() - 0.5) * 0.125,
+                (Math.random() - 0.5) * 0.015,
+                (Math.random() - 0.5) * 0.05
+              );
+            }
+            things.push(Boid(p, v, g));
+          }
+          var last = performance.now();
+          var dist = {
+            c: 0,
+            y1: 0,
+            y2: 0,
+            d: 1,
+          };
+          tick();
+
+          function tick() {
+            requestAnimationFrame(tick);
+            var now = performance.now();
+            var d = Math.min(now - last, 40);
+
+            dist.c++;
+            if (100 < dist.c) {
+              var ncount = 0,
+                pcount = 0;
+              var y1 = Math.random() * (HEIGHT - 80) + 40;
+              var y2 = y1 + Math.random() * 10 + 30;
+              y1 = 2 * y1 - y2;
+              for (var i = 0; i < things.length; i++)
+                if (things[i].t == BOID) {
+                  if (things[i].v.x < 0) ncount++;
+                  if (0 < things[i].v.x) pcount++;
+                }
+              if (ncount < (ncount + pcount) * 0.2)
+                dist = {
+                  c: -50,
+                  y1: y1,
+                  y2: y2,
+                  d: -1,
+                };
+              else if (pcount < (ncount + pcount) * 0.2)
+                dist = {
+                  c: -50,
+                  y1: y1,
+                  y2: y2,
+                  d: 1,
+                };
+              else dist.c = 0;
+            }
+
+            for (var i = 0; i < things.length; i++)
+              control(things[i], things, dist);
+            var newThings = [];
+            for (i = 0; i < things.length; i++)
+              if (check(things[i], things)) newThings.push(things[i]);
+            things = newThings;
+            for (i = 0; i < things.length; i++) update(things[i], d);
+            for (i = 0; i < things.length; i++) render(things[i]);
+
+            last = now;
+          }
+        }
+
+        var gs = document.getElementsByClassName("g");
+        for (var j = 0; j < gs.length; j++) apply(gs[j]);
+      })();
+    </script>
+  </body>
+</html>
