@@ -1,0 +1,16 @@
+.ctn {
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+	justify-content: center;
+	margin: auto;
+}
+
+#output {
+	margin: auto;
+	padding: 4px;
+	background: rgba(0,0,0,0.2);
+	color: black;
+	border-radius: 16px;
+	border: 2px solid rgba(0,0,0,0.4);
+}
